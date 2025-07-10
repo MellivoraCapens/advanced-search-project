@@ -75,4 +75,10 @@ const DataSchema = new Schema<IData>({
   },
 });
 
+DataSchema.index({
+  description: "text",
+  experience: "text",
+  education: "text",
+});
+
 export default mongoose.model<IData>("Data", DataSchema);

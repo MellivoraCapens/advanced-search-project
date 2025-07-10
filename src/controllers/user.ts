@@ -1,5 +1,4 @@
 /// <reference path="../../@types/index.d.ts" />
-
 import { Request, Response, NextFunction } from "express";
 import Data, { IData } from "../models/Data";
 import { detailSearch } from "../utils/detailSearch";
@@ -211,7 +210,7 @@ export const advanceDataTextSearch = async (
           $facet: {
             result: [
               {
-                $limit: 25,
+                $limit: body.limit || 25,
               },
             ],
             total: [
@@ -271,12 +270,11 @@ export const advanceDataTextSearch = async (
       const data = await Data.aggregate(pipeline);
 
       res.status(200).json({
-        data,
+        data: data[0].result,
+        count: data[0].total[0].count,
       });
     } catch (err) {
       const body: SearchDetailType = req.body;
-
-      await Data.collection.createIndex(body.text.path);
 
       const pipeline: any = [
         {
@@ -300,6 +298,20 @@ export const advanceDataTextSearch = async (
             score: -1,
           },
         },
+        {
+          $facet: {
+            result: [
+              {
+                $limit: body.limit || 25,
+              },
+            ],
+            total: [
+              {
+                $count: "count",
+              },
+            ],
+          },
+        },
       ];
 
       if (!body.text.operator) {
@@ -319,18 +331,165 @@ export const advanceDataTextSearch = async (
         );
       }
 
-      const data = await Data.aggregate<IData>(pipeline);
-
-      await Data.collection.dropIndex("*");
+      const data = await Data.aggregate(pipeline);
 
       res.status(200).json({
-        err,
-        data,
+        data: data[0].result,
+        count: data[0].total[0].count,
       });
     }
   } catch (error) {
-    Data.collection.dropIndex("*");
-    console.log(error);
+    res.status(400).json(error);
+  }
+};
+
+// @desc advance text search for pagination
+// @route POST /advance-search/api/v1/data/page
+// @access public
+export const advanceTextSearchPage = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    try {
+      const body: SearchDetailType = req.body;
+
+      const pipeline: any = [
+        {
+          $search: {
+            index: "advance",
+            compound: {},
+            highlight: {
+              path: body.text.path,
+            },
+          },
+        },
+        {
+          $addFields: {
+            highlights: {
+              $meta: "searchHighlights",
+            },
+            score: {
+              $meta: "searchScore",
+            },
+          },
+        },
+        {
+          $skip: body.page ? body.page * (body.limit || 25) : 0,
+        },
+        {
+          $limit: body.limit || 25,
+        },
+      ];
+
+      const textSearch = {
+        [body.text.operator ? "must" : "mustNot"]: [
+          {
+            compound: {
+              should: [
+                {
+                  text: {
+                    query: body.text.query,
+                    path: body.text.path,
+                    matchCriteria: "all",
+                    fuzzy: {
+                      maxEdits: 1,
+                    },
+                  },
+                },
+                {
+                  phrase: {
+                    query: body.text.query,
+                    path: body.text.path,
+                    slop: 5,
+                    score: {
+                      boost: {
+                        value: 2,
+                      },
+                    },
+                  },
+                },
+              ],
+              minimumShouldMatch: 1,
+            },
+          },
+        ],
+      };
+
+      pipeline[0].$search.compound = textSearch;
+
+      if (body.detailSearch) {
+        pipeline[0].$search.compound["should"] = [
+          {
+            compound: detailSearch(body.search, body.field, body.operator),
+          },
+        ];
+        pipeline[0].$search.compound["minimumShouldMatch"] = 1;
+      }
+
+      const data = await Data.aggregate(pipeline);
+
+      res.status(200).json({
+        data,
+      });
+    } catch (err) {
+      const body: SearchDetailType = req.body;
+      const pipeline: any = [
+        {
+          $match: {
+            $and: [
+              {
+                $text: {
+                  $search: body.text.query,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $addFields: {
+            score: { $meta: "textScore" },
+          },
+        },
+        {
+          $sort: {
+            score: -1,
+          },
+        },
+        {
+          $skip: body.page ? body.page * (body.limit || 25) : 0,
+        },
+        {
+          $limit: body.limit || 25,
+        },
+      ];
+
+      if (!body.text.operator) {
+        pipeline.splice(1, 2);
+
+        const matched = await Data.aggregate([
+          pipeline[0],
+          { $project: { _id: 1 } },
+        ]);
+        const idsToExclude = matched.map((doc) => doc._id);
+        pipeline[0].$match.$and = [{ _id: { $nin: idsToExclude } }];
+      }
+
+      if (body.detailSearch) {
+        pipeline[0].$match.$and.push(
+          handleDefaultDetail(body.search, body.field, body.operator)
+        );
+      }
+
+      const data = await Data.aggregate(pipeline);
+
+      res.status(200).json({
+        data,
+        err,
+      });
+    }
+  } catch (error) {
     res.status(400).json(error);
   }
 };
