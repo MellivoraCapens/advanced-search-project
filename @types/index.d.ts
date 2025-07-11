@@ -39,4 +39,11 @@ declare global {
     from: Date | null;
     to: Date | null;
   }
+
+  interface Error {
+    errors: string;
+    value: string;
+    code: number;
+    statusCode: number;
+  }
 }

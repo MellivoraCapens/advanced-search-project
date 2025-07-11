@@ -3,6 +3,9 @@ import { Request, Response, NextFunction } from "express";
 import Data, { IData } from "../models/Data";
 import { detailSearch } from "../utils/detailSearch";
 import { handleDefaultDetail } from "../utils/handleDefaultDetail";
+import { errorHandler } from "../middlewares/error";
+import { ne } from "@faker-js/faker";
+import { asyncHandler } from "../middlewares/asyncHandler";
 
 // @desc advance text search for user
 // @route POST /advance-search/api/v1/user
@@ -177,12 +180,8 @@ export const advanceUserTextSearch = async (
 // @desc advance text search for data(recursive)
 // @route POST /advance-search/api/v1/data
 // @access public
-export const advanceDataTextSearch = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
+export const advanceDataTextSearch = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const body: SearchDetailType = req.body;
 
@@ -268,10 +267,12 @@ export const advanceDataTextSearch = async (
       }
 
       const data = await Data.aggregate(pipeline);
+      const count = data[0].total[0] ? data[0].total[0].count : 0;
 
       res.status(200).json({
+        success: true,
         data: data[0].result,
-        count: data[0].total[0].count,
+        count,
       });
     } catch (err) {
       const body: SearchDetailType = req.body;
@@ -332,26 +333,22 @@ export const advanceDataTextSearch = async (
       }
 
       const data = await Data.aggregate(pipeline);
+      const count = data[0].total[0] ? data[0].total[0].count : 0;
 
       res.status(200).json({
+        success: true,
         data: data[0].result,
-        count: data[0].total[0].count,
+        count,
       });
     }
-  } catch (error) {
-    res.status(400).json(error);
   }
-};
+);
 
 // @desc advance text search for pagination
 // @route POST /advance-search/api/v1/data/page
 // @access public
-export const advanceTextSearchPage = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
+export const advanceTextSearchPage = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const body: SearchDetailType = req.body;
 
@@ -431,6 +428,7 @@ export const advanceTextSearchPage = async (
       const data = await Data.aggregate(pipeline);
 
       res.status(200).json({
+        success: true,
         data,
       });
     } catch (err) {
@@ -485,11 +483,9 @@ export const advanceTextSearchPage = async (
       const data = await Data.aggregate(pipeline);
 
       res.status(200).json({
+        success: true,
         data,
-        err,
       });
     }
-  } catch (error) {
-    res.status(400).json(error);
   }
-};
+);
