@@ -16,6 +16,7 @@ app.use(express.json());
 app.use(cors({ origin: "http://localhost:3000" }));
 
 app.use("/advance-search/api/v1", user);
+
 app.use(errorHandler);
 
 app.listen(PORT, () => {

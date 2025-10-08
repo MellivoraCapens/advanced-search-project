@@ -1,9 +1,11 @@
 /// <reference path="../../@types/index.d.ts" />
 import { Request, Response, NextFunction } from "express";
 import Data from "../models/Data";
+import Query from "../models/Query";
 import { detailSearch } from "../utils/detailSearch";
 import { handleDefaultDetail } from "../utils/handleDefaultDetail";
 import { asyncHandler } from "../middlewares/asyncHandler";
+import { de } from "@faker-js/faker";
 
 // @desc advance text search for user
 // @route POST /advance-search/api/v1/user
@@ -15,8 +17,6 @@ export const advanceUserTextSearch = async (
 ) => {
   try {
     const body: any = req.body;
-
-    console.dir(body, { depth: null });
 
     const pipelineFunction = (body: any) => {
       const firstRadio = body.radioOutput === "and" ? "must" : "should";
@@ -146,7 +146,6 @@ export const advanceUserTextSearch = async (
         }
       }
 
-      console.dir(pipeline, { depth: null });
       return pipeline;
     };
 
@@ -342,7 +341,7 @@ export const advanceDataTextSearch = asyncHandler(
   }
 );
 
-// @desc advance text search for pagination(Atlas Search)
+// @desc advance text search pagination for Atlas Search
 // @route POST /advance-search/api/v1/data/page
 // @access public
 export const advanceTextSearchPage = asyncHandler(
@@ -431,7 +430,7 @@ export const advanceTextSearchPage = asyncHandler(
   }
 );
 
-// @desc advance text search for pagination(Full Text Search)
+// @desc advance text search pagination for Full Text Search
 // @route POST /advance-search/api/v1/data/page/default
 // @access public
 
@@ -487,4 +486,40 @@ export const advanceTextSearchPageDefault = asyncHandler(
       data,
     });
   }
+);
+
+// @desc indexing search query
+// @route POST /advance-search/api/v1/data/index
+// @access public
+export const createQuery = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const query = { ...req.body.body };
+    delete query.title;
+
+    const indexedQuery = await Query.create({
+      title: req.body.body.title,
+      query: query,
+    });
+
+    res.status(200).json({ success: true, data: indexedQuery });
+  }
+);
+
+// @desc get query titles
+// @route GET /advance-search/api/v1/data/index-titles
+// @access public
+export const getQueryTitles = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const data = await Query.aggregate([{ $project: { title: 1, _id: 0 } }]);
+    const titles = data.map((item) => item.title);
+
+    res.status(200).json({ success: true, data: titles });
+  }
+);
+
+// @desc get indexed search query data
+// @route GET /advance-search/api/v1/data/get-index
+// @access public
+export const getIndexedData = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {}
 );

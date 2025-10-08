@@ -19,6 +19,7 @@ export interface IData extends mongoose.Document {
     streetAddress: string;
     zipCode: string;
   };
+  savedQueryIds: mongoose.Types.ObjectId[];
   createdAt: Date;
 }
 
@@ -69,6 +70,7 @@ const DataSchema = new Schema<IData>({
     streetAddress: String,
     zipCode: String,
   },
+  savedQueryIds: [{ type: mongoose.Types.ObjectId, ref: "Query" }],
   createdAt: {
     type: Date,
     default: Date.now(),
