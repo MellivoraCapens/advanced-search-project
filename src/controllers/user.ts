@@ -1,5 +1,5 @@
 /// <reference path="../../@types/index.d.ts" />
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction, query } from "express";
 import Data from "../models/Data";
 import Query from "../models/Query";
 import { detailSearch } from "../utils/detailSearch";
@@ -514,6 +514,28 @@ export const getQueryTitles = asyncHandler(
     const titles = data.map((item) => item.title);
 
     res.status(200).json({ success: true, data: titles });
+  }
+);
+
+// @desc get queries info
+// @route GET /advance-search/api/v1/data/get-queries
+// @access public
+export const getQueriesInfo = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const data = await Query.aggregate([
+      {
+        $project: {
+          title: 1,
+          status: 1,
+          numberOfResults: 1,
+          createdAt: 1,
+          _id: 1,
+          query: 1,
+        },
+      },
+      { $sort: { createdAt: -1 } },
+    ]);
+    res.status(200).json({ success: true, data });
   }
 );
 

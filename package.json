@@ -6,6 +6,7 @@
     "clean": "rm -rf dist",
     "start": "set NODE_ENV=development && nodemon ./src/server.ts",
     "seed": "ts-node ./src/seeder/newSeeder.ts",
+    "query-saver": "ts-node ./src/scripts/querySaver.ts",
     "build": "npm run clean && tsc && cp .env dist/"
   },
   "author": "mellivoraCapensis",
@@ -26,7 +27,7 @@
   "devDependencies": {
     "@types/cors": "^2.8.18",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.3"
   },
   "description": ""
 }
