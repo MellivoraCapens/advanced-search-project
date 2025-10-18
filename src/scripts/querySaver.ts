@@ -10,15 +10,15 @@ import delay from "./utils/delay";
 const BATCH_SIZE = 100;
 const PARALLEL = 2;
 
-const MIN = 1;
+const MIN = 15;
 const POLL_MS = 1000 * 60 * MIN;
 const DAY = 2;
-const UPDATE_INVALID_DAY = 1000 * 60 * 60 * 24 * DAY;
+const UPDATE_INTERVAL_DAY = 1000 * 60 * 60 * 24 * DAY;
 
 async function start() {
   console.log(
-    style("  - Q U E R Y   S A V E R -  ", ["black", "bgMagenta", "bold"]) +
-      color(".v0.1", "gray", "italic")
+    style("  - Q U E R Y   S A V E R -  ", ["bgCyan", "black"]) +
+      color("v0.1", "gray", "italic")
   );
 
   await connectDB();
@@ -35,7 +35,7 @@ async function start() {
 
 const querySaver = async () => {
   try {
-    const query = await queryFinder(UPDATE_INVALID_DAY);
+    const query = await queryFinder(UPDATE_INTERVAL_DAY);
     if (query) {
       const pipeline = pipelineMaker(
         query.query,
@@ -110,7 +110,7 @@ const querySaver = async () => {
           }
 
           console.log(
-            color(`"${query.title}"`, "green") +
+            color(`"${query.title}"`, "greenBright") +
               color(" is updated.", "magenta")
           );
         })

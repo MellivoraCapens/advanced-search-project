@@ -3,7 +3,7 @@ import color from "./color";
 
 const queryFinder = async (intervalTime: number) => {
   process.stdout.write("\n");
-  console.log(color(`${new Date().toTimeString()}`, "magenta"));
+  console.log(color(`${new Date().toTimeString()}`, "yellowBright"));
   console.log(color("Searching for Pending Query...", "cyan"));
 
   const [pendingQuery] = await Query.aggregate([
