@@ -1,9 +1,10 @@
 import "dotenv/config";
 import mongoose, { AnyBulkWriteOperation } from "mongoose";
-import { fakerEN_US as faker } from "@faker-js/faker";
+import { de, fakerEN_US as faker } from "@faker-js/faker";
 import DataModel from "../models/Data";
 import { input } from "@inquirer/prompts";
 import chalk from "chalk";
+import delay from "../scripts/utils/delay";
 
 const CHUNK = 400;
 const BULK_CHUNK_SIZE = 40;
@@ -392,6 +393,18 @@ function* chunks<T>(arr: T[], n: number) {
   }
 }
 
+async function ask() {
+  const [answerErr, answer] = await Result(
+    input({
+      message: "Random Loop? (y/n)",
+      default: "n",
+    })
+  );
+  if (answer === "y") {
+    return true;
+  } else false;
+}
+
 async function getUserInput() {
   const [userInputErr, userInput] = await Result(
     input({
@@ -416,28 +429,7 @@ async function getUserInput() {
   return +userInput;
 }
 
-async function seeder() {
-  const [connErr] = await Result(
-    mongoose.connect(process.env.MONGO_URI as string, {
-      // serverSelectionTimeoutMS: 1000,
-    })
-  );
-
-  if (connErr) {
-    console.trace(chalk.red("* Could not connect to mongodb: "), connErr);
-    process.exit(1);
-  }
-
-  console.log(chalk.green("+ Connected to Database!"));
-  console.log(chalk.bgCyan(">>>  * S E E D E R  A P P L I C A T I O N *  <<<"));
-
-  const [userInputErr, userInput] = await Result(getUserInput());
-
-  if (userInputErr || userInput === 0) {
-    console.log(chalk.red("* No input was specified. Exiting."));
-    process.exit(1);
-  }
-
+async function seeder(userInput: number) {
   let bulkArr: AnyBulkWriteOperation[] = [];
   let seedCount = userInput || 0;
   let insertedCount = 0;
@@ -522,7 +514,7 @@ async function seeder() {
         streetAddress: faker.location.streetAddress(),
         zipCode: faker.location.zipCode(),
       },
-      createdAt: faker.date.past({ years: 15 }),
+      createdAt: new Date(),
     };
     bulkArr.push({
       insertOne: {
@@ -538,7 +530,7 @@ async function seeder() {
       )
     );
     console.timeEnd("TOTAL_SEEDER");
-    process.exit(0);
+    return;
   }
 
   console.log(
@@ -582,7 +574,48 @@ async function seeder() {
     )
   );
   console.timeEnd("TOTAL_SEEDER");
-  process.exit(0);
+  return;
 }
 
-seeder();
+async function start() {
+  const [connErr] = await Result(
+    mongoose.connect(process.env.MONGO_URI as string, {
+      // serverSelectionTimeoutMS: 1000,
+    })
+  );
+
+  if (connErr) {
+    console.trace(chalk.red("* Could not connect to mongodb: "), connErr);
+    process.exit(1);
+  }
+
+  console.log(chalk.green("+ Connected to Database!"));
+  console.log(chalk.bgCyan(">>>  * S E E D E R  A P P L I C A T I O N *  <<<"));
+
+  const [askErr, askResult] = await Result(ask());
+  if (!askResult) {
+    const [userInputErr, userInput] = await Result(getUserInput());
+
+    if (userInputErr || userInput === 0) {
+      console.log(chalk.red("* No input was specified. Exiting."));
+      process.exit(1);
+    }
+    await seeder(userInput);
+    process.exit(0);
+  }
+  if (askResult) {
+    console.log("Random Seed Loop");
+    while (askResult) {
+      const inputNumber = Math.floor(Math.random() * (50 - 10 + 1) + 10);
+      const sleepMin = Math.floor(Math.random() * (12 - 7 + 1) + 7);
+      const POLL_MS = 1000 * 60 * sleepMin;
+
+      console.log({ userCount: inputNumber, minute: sleepMin });
+
+      await seeder(inputNumber);
+      await delay(POLL_MS);
+    }
+  }
+}
+
+start();

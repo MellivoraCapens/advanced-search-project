@@ -1,10 +1,9 @@
 import Query from "../../models/Query";
 import color from "./color";
+import { logger } from "./logger";
 
 const queryFinder = async (intervalTime: number) => {
   process.stdout.write("\n");
-  console.log(color(`${new Date().toTimeString()}`, "yellowBright"));
-  console.log(color("Searching for Pending Query...", "cyan"));
 
   const [pendingQuery] = await Query.aggregate([
     { $match: { status: "pending" } },
@@ -13,16 +12,14 @@ const queryFinder = async (intervalTime: number) => {
   ]);
 
   if (pendingQuery) {
-    console.log(
+    logger.debug(
       color("Pending Query Found: ", "cyan") +
         color(`${pendingQuery.title}`, "greenBright")
     );
     return pendingQuery;
   }
 
-  console.log(color("No Pending Query Found!", "red"));
-
-  console.log(color("Searching for Updatable Query...", "cyan"));
+  logger.debug(color("No Pending Query Found!", "red"));
 
   const [updateQuery] = await Query.aggregate([
     {
@@ -42,13 +39,13 @@ const queryFinder = async (intervalTime: number) => {
   ]);
 
   if (updateQuery) {
-    console.log(
+    logger.debug(
       color("Updating Query: ", "magenta") +
         color(`${updateQuery.title}`, "greenBright")
     );
     return updateQuery;
   }
-  console.log(color("No Updatable Query Found!", "red"));
+  logger.debug(color("No Updatable Query Found!", "red"));
 
   return null;
 };

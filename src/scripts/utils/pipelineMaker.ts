@@ -1,7 +1,11 @@
 import { detailSearch } from "./detailSearch";
 import { SearchDetailType } from "../types/types";
+import mongoose from "mongoose";
 
-const pipelineMaker = (query: SearchDetailType, lastUpdate: Date | null) => {
+const pipelineMaker = (
+  query: SearchDetailType,
+  lastUpdatedId: string | null
+) => {
   const pipeline: any = [
     {
       $search: {
@@ -14,9 +18,9 @@ const pipelineMaker = (query: SearchDetailType, lastUpdate: Date | null) => {
     },
   ];
 
-  if (lastUpdate) {
+  if (lastUpdatedId) {
     pipeline.splice(1, 0, {
-      $match: { createdAt: { $gt: lastUpdate } },
+      $match: { _id: { $gt: new mongoose.Types.ObjectId(lastUpdatedId) } },
     });
   }
 
@@ -40,11 +44,6 @@ const pipelineMaker = (query: SearchDetailType, lastUpdate: Date | null) => {
                 query: query.text.query,
                 path: query.text.path,
                 slop: 5,
-                score: {
-                  boost: {
-                    value: 2,
-                  },
-                },
               },
             },
           ],

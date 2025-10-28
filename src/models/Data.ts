@@ -73,7 +73,7 @@ const DataSchema = new Schema<IData>({
   savedQueryIds: [{ type: mongoose.Types.ObjectId, ref: "Query" }],
   createdAt: {
     type: Date,
-    default: Date.now(),
+    default: new Date(),
   },
 });
 

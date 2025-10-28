@@ -1,15 +1,14 @@
 import mongoose from "mongoose";
-import chalk from "chalk";
+import { logger } from "../utils/logger";
 
 export const connectDB = async () => {
   const conn = mongoose.connect(`${process.env.MONGO_URI}`);
 
   if ((await conn).Error.DocumentNotFoundError === null) {
-    console.log((await conn).Error);
+    logger.error("Database Connection Error!", (await conn).Error);
   }
 
-  console.log(
-    chalk.cyan("MongoDB Connected:") +
-      chalk.greenBright(` ${(await conn).connection.host}`)
-  );
+  if ((await conn).connection.host) {
+    logger.debug(`MongoDB Connected: ${(await conn).connection.host}`);
+  }
 };

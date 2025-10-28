@@ -1,11 +1,11 @@
 /// <reference path="../../@types/index.d.ts" />
-import { Request, Response, NextFunction, query } from "express";
+import { Request, Response, NextFunction } from "express";
 import Data from "../models/Data";
 import Query from "../models/Query";
 import { detailSearch } from "../utils/detailSearch";
 import { handleDefaultDetail } from "../utils/handleDefaultDetail";
 import { asyncHandler } from "../middlewares/asyncHandler";
-import { de } from "@faker-js/faker";
+import mongoose from "mongoose";
 
 // @desc advance text search for user
 // @route POST /advance-search/api/v1/user
@@ -489,7 +489,7 @@ export const advanceTextSearchPageDefault = asyncHandler(
 );
 
 // @desc indexing search query
-// @route POST /advance-search/api/v1/data/index
+// @route POST /advance-search/api/v1/data/query
 // @access public
 export const createQuery = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -540,8 +540,16 @@ export const getQueriesInfo = asyncHandler(
 );
 
 // @desc get indexed search query data
-// @route GET /advance-search/api/v1/data/get-index
+// @route POST /advance-search/api/v1/data/get-queried-data
 // @access public
-export const getIndexedData = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {}
+export const getQueriedData = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const body = req.body;
+    const id = new mongoose.Types.ObjectId(body._id as string);
+
+    console.log(body);
+    const data = await Data.aggregate([{ $match: { savedQueryIds: id } }]);
+
+    res.status(200).json({ success: true, data });
+  }
 );
