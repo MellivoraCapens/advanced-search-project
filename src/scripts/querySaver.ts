@@ -28,7 +28,7 @@ async function start() {
   while (true) {
     try {
       await querySaver();
-      await delay(UPDATE_INTERVAL_DAY);
+      await delay(POLL_MS);
     } catch (error) {
       logger.error("[GLOBAL_ERROR] An unhandled error occurred on Start.", {
         error,
@@ -41,7 +41,7 @@ async function start() {
 
 const querySaver = async () => {
   try {
-    const query = await queryFinder(POLL_MS);
+    const query = await queryFinder(UPDATE_INTERVAL_DAY);
 
     if (!query) {
       logger.info("Couldn't found any Pending or Updatable Query!");

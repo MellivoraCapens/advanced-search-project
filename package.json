@@ -7,7 +7,7 @@
     "start": "set NODE_ENV=development && nodemon ./src/server.ts",
     "seed": "ts-node ./src/seeder/newSeeder.ts",
     "query-saver": "ts-node ./src/scripts/querySaver.ts",
-    "test": "ts-node ./src/scripts/test.ts",
+    "test": "ts-node ./dist/server.js",
     "build": "npm run clean && tsc && cp .env dist/"
   },
   "author": "mellivoraCapensis",

@@ -539,7 +539,7 @@ export const getQueriesInfo = asyncHandler(
   }
 );
 
-// @desc get indexed search query data
+// @desc get saved search query data
 // @route POST /advance-search/api/v1/data/get-queried-data
 // @access public
 export const getQueriedData = asyncHandler(
@@ -548,7 +548,12 @@ export const getQueriedData = asyncHandler(
     const id = new mongoose.Types.ObjectId(body._id as string);
 
     console.log(body);
-    const data = await Data.aggregate([{ $match: { savedQueryIds: id } }]);
+
+    const data = await Data.aggregate([
+      { $match: { savedQueryIds: id } },
+      { $skip: body.page ? body.page * body.limit : 0 },
+      { $limit: body.limit || 25 },
+    ]);
 
     res.status(200).json({ success: true, data });
   }
