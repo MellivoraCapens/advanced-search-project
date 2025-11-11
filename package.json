@@ -9,8 +9,8 @@
     "query-saver": "ts-node ./src/scripts/querySaver.ts",
     "test": "ts-node ./dist/server.js",
     "build": "npm run clean && tsc && cp .env dist/",
-    "deploy:server": "pm2 stop server && pm2 start /dist/server.js",
-    "deploy:saver": "pm2 stop querySaver && pm2 start /dist/scripts/querySaver.js"
+    "deploy:server": "pm2 stop server && pm2 start ./dist/server.js",
+    "deploy:saver": "pm2 stop querySaver && pm2 start ./dist/scripts/querySaver.js"
   },
   "author": "mellivoraCapensis",
   "license": "ISC",
