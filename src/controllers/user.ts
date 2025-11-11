@@ -169,7 +169,6 @@ export const advanceUserTextSearch = async (
       data: data,
     });
   } catch (error) {
-    console.log(error);
     res.status(400).json(error);
   }
 };
@@ -547,8 +546,6 @@ export const getQueriedData = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const body = req.body;
     const id = new mongoose.Types.ObjectId(body._id as string);
-
-    console.log(body);
 
     const data = await Data.aggregate([
       { $match: { savedQueryIds: id } },
