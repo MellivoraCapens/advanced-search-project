@@ -15,7 +15,7 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin: "https://mellivoracapens.github.io/advanced-search-project-client",
+    origin: "https://mellivoracapens.github.io",
   })
 );
 
