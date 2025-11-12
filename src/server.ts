@@ -13,7 +13,11 @@ const app: express.Application = express();
 
 app.use(express.json());
 
-app.use(cors({ origin: "http://localhost:3000" }));
+app.use(
+  cors({
+    origin: "https://mellivoracapens.github.io/advanced-search-project-client",
+  })
+);
 
 app.use("/advance-search/api/v1", user);
 
